@@ -134,7 +134,7 @@ client.on(Events.MessageCreate, async (message) => {
                 text: 'Adana Roleplay © 2026 | Güvenliğiniz için doğrulama zorunludur', 
                 iconURL: 'https://i.imgur.com/robloxlogo.png' 
             })
-            .setTimestamp();
+            
         
                 const row = new ActionRowBuilder()
             .addComponents(
