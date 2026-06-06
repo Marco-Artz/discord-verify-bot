@@ -9,7 +9,8 @@ const {
     TextInputStyle,
     EmbedBuilder,
     PermissionsBitField,
-    Events
+    Events,
+    SlashCommandBuilder
 } = require('discord.js');
 
 const http = require('http');
