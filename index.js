@@ -110,9 +110,9 @@ client.on(Events.MessageCreate, async (message) => {
               const embed = new EmbedBuilder()
             .setColor(0xFF6B00) // Turuncu renk, Adana teması
             .setTitle('🏙️ ADANA ROLEPLAY')
-            .setURL('https://discord.gg/adanaroleplay') // Sunucu linkin varsa
+            .setURL('https://discord.gg/22mwp6GxMB') // Sunucu linkin varsa
             .setAuthor({ 
-                name: 'Roblox Verify Sistemi', 
+                name: 'Adana RolePlay Verify Sistemi', 
                 iconURL: 'https://i.imgur.com/robloxlogo.png' // Roblox logosu
             })
             .setDescription(
@@ -129,7 +129,7 @@ client.on(Events.MessageCreate, async (message) => {
                 '• Kuralları okumadan doğrulama yapmayınız'
             )
             .setThumbnail('https://cdn.discordapp.com/attachments/1512580110757138432/1512779870978048070/Gemini_Generated_Image_6c4wgg6c4wgg6c4w-Photoroom.png?ex=6a25558b&is=6a24040b&hm=a1f091d9b5d30cafd976010e6754f7e6b10424b5824235cd44d72dd970593e87&') // LOGONUN URL'SİNİ BURAYA YAZ
-            .setImage('https://i.imgur.com/BANNER_RESIM_BURAYA.png') // BANNER RESMİN VARSA BURAYA YAZ
+            .setImage('https://cdn.discordapp.com/attachments/1512580110757138432/1512781920763641936/ChatGPT_Image_6_Haz_2026_14_35_03.png?ex=6a255774&is=6a2405f4&hm=96fc2dd6ddf5154d2ed64eda307e0b7727503f6af41f5b8fe5852b56493ba9bc&') // BANNER RESMİN VARSA BURAYA YAZ
             .setFooter({ 
                 text: 'Adana Roleplay © 2026 | Güvenliğiniz için doğrulama zorunludur', 
                 iconURL: 'https://i.imgur.com/robloxlogo.png' 
