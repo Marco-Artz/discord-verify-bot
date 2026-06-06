@@ -267,4 +267,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 // ============================================
 // BOTU BASLAT
 // ============================================
+// TEST KOMUTU
+client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return;
+    
+    // Herhangi bir mesaja yanıt ver
+    if (message.content === 'ping') {
+        await message.reply('pong! Bot calisiyor.');
+    }
+});
 client.login(CONFIG.BOT_TOKEN);
