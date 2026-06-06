@@ -12,12 +12,14 @@ const {
     Events
 } = require('discord.js');
 
+const http = require('http');
+
 const CONFIG = {
     BOT_TOKEN: process.env.BOT_TOKEN,
     GUILD_ID: '1511780606089101352',
     UNVERIFIED_ROLE_ID: '1512530332006617299',
     VERIFIED_ROLE_ID: '1512529546937766082',
-    VERIFY_CHANNEL_ID: '1512566743225077810'
+    VERIFY_CHANNEL_ID: '1511780608320344085'
 };
 
 const client = new Client({
@@ -30,14 +32,46 @@ const client = new Client({
 });
 
 // ============================================
+// WEB SUNUCUSU (Render için gerekli)
+// ============================================
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<h1>Adana Roleplay Bot Aktif!</h1><p>Discord bot calisiyor.</p>');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`🌐 Web sunucusu ${PORT} portunda calisiyor`);
+});
+
+// ============================================
 // BOT HAZIR OLDUĞUNDA
 // ============================================
 client.once(Events.ClientReady, async () => {
     console.log(`✅ Bot aktif: ${client.user.tag}`);
+    
+    const guild = client.guilds.cache.get(CONFIG.GUILD_ID);
+    if (!guild) return;
+    
+    const verifyCommand = new SlashCommandBuilder()
+        .setName('dogrula')
+        .setDescription('Roblox hesabini dogrula')
+        .addStringOption(opt => 
+            opt.setName('roblox_adi')
+                .setDescription('Roblox kullanici adin')
+                .setRequired(true)
+        );
+    
+    const codeCommand = new SlashCommandBuilder()
+        .setName('kodum')
+        .setDescription('Dogrulama kodunu gor');
+    
+    await guild.commands.set([verifyCommand, codeCommand]);
+    console.log('✅ Slash komutlari kaydedildi!');
 });
 
 // ============================================
-// YENİ ÜYE KATILDIĞINDA
+// YENI UYE KATILDIGINDA
 // ============================================
 client.on(Events.GuildMemberAdd, async (member) => {
     if (member.user.bot) return;
@@ -47,105 +81,92 @@ client.on(Events.GuildMemberAdd, async (member) => {
     
     try {
         await member.roles.add(unverifiedRole);
-        console.log(`✅ ${member.user.tag} için UnVerified rolü verildi.`);
+        console.log(`✅ ${member.user.tag} icin UnVerified rolu verildi.`);
     } catch (error) {
         console.log(`❌ Rol verilemedi: ${error.message}`);
     }
 });
 
 // ============================================
-// DOĞRULAMA VERİLERİ
+// DOGRULAMA VERILERI
 // ============================================
-const pendingVerifications = new Map(); // { discordID: { robloxUsername, code } }
+const pendingVerifications = new Map();
 
 // ============================================
-// MESAJ GÖNDERİLDİĞİNDE - VERIFY MESAJI GÖNDER
+// MESAJ GONDERILDIGINDE - VERIFY MESAJI
 // ============================================
 client.on(Events.MessageCreate, async (message) => {
-    // Sadece verify kanalında ve botun kendisi değilse
     if (message.channelId !== CONFIG.VERIFY_CHANNEL_ID) return;
     if (message.author.bot) return;
     
-    // Eğer "setup" yazıldıysa doğrulama mesajını gönder
     if (message.content.toLowerCase() === '!setup') {
-        // Eski mesajları temizle (isteğe bağlı)
         try {
             const messages = await message.channel.messages.fetch({ limit: 10 });
             const botMessages = messages.filter(m => m.author.id === client.user.id);
             await message.channel.bulkDelete(botMessages);
-        } catch (e) {
-            // Yetki yoksa atla
-        }
+        } catch (e) {}
         
         const embed = new EmbedBuilder()
             .setColor(0x2B2D31)
-            .setTitle('Roblox Verify Sistemi')
+            .setTitle('🔐 Roblox Verify Sistemi')
             .setDescription(
-                '**ADIM 1** Aşağıdaki **Hesabı Gir** butonuna basın ve Roblox isminizi girin.\n\n' +
-                '**ADIM 2** Talimatları tamamladıktan sonra **Hesabı Onayla** butonuna basarak <@&' + CONFIG.VERIFIED_ROLE_ID + '> rolünüzü alın.'
+                '**Adana Roleplay** sunucusuna hos geldin!\n\n' +
+                '**ADIM 1** → **Hesabi Gir** butonuna bas ve Roblox ismini gir\n' +
+                '**ADIM 2** → Roblox profiline dogrulama kodunu ekle\n' +
+                '**ADIM 3** → **Hesabi Onayla** butonuna bas ve <@&' + CONFIG.VERIFIED_ROLE_ID + '> rolunu al!'
             )
-            .setImage('https://i.imgur.com/placeholder.png') // İstersen kendi görsel linkin
             .setFooter({ text: 'Adana Roleplay © 2024' });
         
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId('enter_account')
-                    .setLabel('Hesabı Gir')
-                    .setStyle(ButtonStyle.Secondary)
+                    .setLabel('Hesabi Gir')
+                    .setStyle(ButtonStyle.Primary)
                     .setEmoji('👤'),
                 new ButtonBuilder()
                     .setCustomId('verify_account')
-                    .setLabel('Hesabı Onayla')
+                    .setLabel('Hesabi Onayla')
                     .setStyle(ButtonStyle.Success)
                     .setEmoji('✅')
             );
         
         await message.channel.send({ embeds: [embed], components: [row] });
         
-        // Kullanıcının !setup mesajını sil
-        try {
-            await message.delete();
-        } catch (e) {}
+        try { await message.delete(); } catch (e) {}
     }
 });
 
 // ============================================
-// BUTON TIKLANDIĞINDA
+// BUTON TIKLANDIGINDA
 // ============================================
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isButton()) return;
-    
-    // Sadece verify kanalında
     if (interaction.channelId !== CONFIG.VERIFY_CHANNEL_ID) return;
     
-    // =================== HESABI GİR BUTONU ===================
     if (interaction.customId === 'enter_account') {
         const modal = new ModalBuilder()
             .setCustomId('roblox_modal')
-            .setTitle('Roblox Hesabınızı Girin');
+            .setTitle('Roblox Hesabinizi Girin');
         
         const robloxInput = new TextInputBuilder()
             .setCustomId('roblox_username')
-            .setLabel('Roblox Kullanıcı Adınız')
+            .setLabel('Roblox Kullanici Adiniz')
             .setStyle(TextInputStyle.Short)
-            .setPlaceholder('örn: Builderman')
+            .setPlaceholder('orn: Builderman')
             .setRequired(true)
             .setMaxLength(50);
         
-        const firstActionRow = new ActionRowBuilder().addComponents(robloxInput);
-        modal.addComponents(firstActionRow);
-        
+        modal.addComponents(new ActionRowBuilder().addComponents(robloxInput));
         await interaction.showModal(modal);
     }
     
-    // =================== HESABI ONAYLA BUTONU ===================
     if (interaction.customId === 'verify_account') {
         const userData = pendingVerifications.get(interaction.user.id);
         
         if (!userData) {
             await interaction.reply({
-                content: '❌ Önce **Hesabı Gir** butonuna basarak Roblox adını girmelisin!',
+                content: '❌ Once **Hesabi Gir** butonuna basarak Roblox adini girmelisin!',
                 ephemeral: true
             });
             return;
@@ -154,7 +175,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.deferReply({ ephemeral: true });
         
         try {
-            // Roblox API'den kullanıcıyı bul
             const userIdResponse = await fetch('https://users.roblox.com/v1/usernames/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -167,34 +187,30 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const userIdData = await userIdResponse.json();
             
             if (!userIdData.data || userIdData.data.length === 0) {
-                await interaction.editReply('❌ Bu Roblox kullanıcı adı bulunamadı!');
+                await interaction.editReply('❌ Bu Roblox kullanici adi bulunamadi!');
                 return;
             }
             
             const robloxId = userIdData.data[0].id;
-            
-            // Profili çek
             const profileResponse = await fetch(`https://users.roblox.com/v1/users/${robloxId}`);
             const profileData = await profileResponse.json();
             const description = profileData.description || '';
             
-            // Kod profilde var mı?
             if (!description.includes(userData.code)) {
                 await interaction.editReply({
-                    content: '❌ Kod profilinde bulunamadı!\n\n' +
-                        `Profilinde şu kodun olması lazım: ||${userData.code}||\n\n` +
-                        '**Nasıl eklerim?**\n' +
+                    content: '❌ Kod profilinde bulunamadi!\n\n' +
+                        `Profilinde su kodun olmasi lazim: ||${userData.code}||\n\n` +
+                        '**Nasil eklerim?**\n' +
                         '1. Roblox profiline git\n' +
-                        '2. "About" (Hakkımda) kısmına tıkla\n' +
-                        '3. Kodu yapıştır\n' +
+                        '2. "About" kismina tikla\n' +
+                        '3. Kodu yapistir\n' +
                         '4. Kaydet\n' +
-                        '5. Tekrar **Hesabı Onayla** butonuna bas',
+                        '5. Tekrar **Hesabi Onayla** butonuna bas',
                     ephemeral: true
                 });
                 return;
             }
             
-            // DOĞRULAMA BAŞARILI!
             const member = await interaction.guild.members.fetch(interaction.user.id);
             const unverifiedRole = interaction.guild.roles.cache.get(CONFIG.UNVERIFIED_ROLE_ID);
             const verifiedRole = interaction.guild.roles.cache.get(CONFIG.VERIFIED_ROLE_ID);
@@ -202,35 +218,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
             if (unverifiedRole) await member.roles.remove(unverifiedRole);
             if (verifiedRole) await member.roles.add(verifiedRole);
             
-            // İsmi Roblox adıyla değiştir
-            try {
-                await member.setNickname(userData.robloxUsername);
-            } catch (e) {
-                console.log('İsim değiştirilemedi:', e.message);
-            }
+            try { await member.setNickname(userData.robloxUsername); } catch (e) {}
             
-            // Temizlik
             pendingVerifications.delete(interaction.user.id);
             
             await interaction.editReply({
-                content: `✅ **Doğrulama başarılı!**\n\n` +
+                content: `✅ **Dogrulama basarili!**\n\n` +
                     `Roblox: **${userData.robloxUsername}**\n` +
-                    `<@&${CONFIG.VERIFIED_ROLE_ID}> rolün verildi!\n` +
-                    `Kullanıcı adın: **${userData.robloxUsername}** olarak değiştirildi.`,
+                    `<@&${CONFIG.VERIFIED_ROLE_ID}> rolun verildi!`,
                 ephemeral: true
             });
             
-            console.log(`✅ ${interaction.user.tag} -> ${userData.robloxUsername} doğrulandı!`);
-            
         } catch (error) {
             console.error(error);
-            await interaction.editReply('❌ Bir hata oluştu, tekrar dene.');
+            await interaction.editReply('❌ Bir hata olustu, tekrar dene.');
         }
     }
 });
 
 // ============================================
-// MODAL GÖNDERİLDİĞİNDE
+// MODAL GONDERILDIGINDE
 // ============================================
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isModalSubmit()) return;
@@ -245,19 +252,66 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
         
         await interaction.reply({
-            content: `🔑 **Doğrulama Kodun:** ||${code}||\n\n` +
-                `**Adımlar:**\n` +
-                `1. Roblox profiline git: https://www.roblox.com/users/profile\n` +
-                `2. "About" (Hakkımda) kısmına tıkla\n` +
-                `3. Bu kodu yapıştır: ||${code}||\n` +
-                `4. Kaydet\n` +
-                `5. Buraya dön ve **Hesabı Onayla** butonuna bas`,
+            content: `🔑 **Dogrulama Kodun:** ||${code}||\n\n` +
+                `**Adimlar:**\n` +
+                `1. Roblox profiline git\n` +
+                `2. "About" kismina kodu yapistir\n` +
+                `3. Kaydet\n` +
+                `4. **Hesabi Onayla** butonuna bas`,
             ephemeral: true
         });
     }
 });
 
 // ============================================
-// BOTU BAŞLAT
+// ANTI-SPAM
+// ============================================
+const spamMap = new Map();
+
+client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return;
+    
+    const now = Date.now();
+    const userId = message.author.id;
+    
+    if (!spamMap.has(userId)) {
+        spamMap.set(userId, { count: 1, lastMessage: now });
+        return;
+    }
+    
+    const userData = spamMap.get(userId);
+    
+    if (now - userData.lastMessage < 5000) {
+        userData.count++;
+        if (userData.count >= 5) {
+            try {
+                await message.member.timeout(60000, 'Spam tespit edildi');
+                await message.channel.send(`⚠️ ${message.author} spam yaptigi icin 1 dakika susturuldu.`);
+            } catch (e) {}
+            spamMap.delete(userId);
+        }
+    } else {
+        spamMap.set(userId, { count: 1, lastMessage: now });
+    }
+});
+
+// ============================================
+// ANTI-INVITE
+// ============================================
+client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return;
+    
+    const inviteRegex = /(discord\.gg\/|discord\.com\/invite\/|discordapp\.com\/invite\/)/i;
+    
+    if (inviteRegex.test(message.content)) {
+        try {
+            await message.delete();
+            await message.channel.send(`🚫 ${message.author}, Discord davet linki atmak yasak!`);
+        } catch (e) {}
+    }
+});
+
+// ============================================
+// BOTU BASLAT
 // ============================================
 client.login(CONFIG.BOT_TOKEN);
