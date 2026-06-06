@@ -264,54 +264,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 // ============================================
-// ANTI-SPAM
-// ============================================
-const spamMap = new Map();
-
-client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot) return;
-    
-    const now = Date.now();
-    const userId = message.author.id;
-    
-    if (!spamMap.has(userId)) {
-        spamMap.set(userId, { count: 1, lastMessage: now });
-        return;
-    }
-    
-    const userData = spamMap.get(userId);
-    
-    if (now - userData.lastMessage < 5000) {
-        userData.count++;
-        if (userData.count >= 5) {
-            try {
-                await message.member.timeout(60000, 'Spam tespit edildi');
-                await message.channel.send(`⚠️ ${message.author} spam yaptigi icin 1 dakika susturuldu.`);
-            } catch (e) {}
-            spamMap.delete(userId);
-        }
-    } else {
-        spamMap.set(userId, { count: 1, lastMessage: now });
-    }
-});
-
-// ============================================
-// ANTI-INVITE
-// ============================================
-client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot) return;
-    
-    const inviteRegex = /(discord\.gg\/|discord\.com\/invite\/|discordapp\.com\/invite\/)/i;
-    
-    if (inviteRegex.test(message.content)) {
-        try {
-            await message.delete();
-            await message.channel.send(`🚫 ${message.author}, Discord davet linki atmak yasak!`);
-        } catch (e) {}
-    }
-});
-
-// ============================================
 // BOTU BASLAT
 // ============================================
 client.login(CONFIG.BOT_TOKEN);
