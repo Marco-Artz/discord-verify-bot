@@ -107,27 +107,45 @@ client.on(Events.MessageCreate, async (message) => {
             await message.channel.bulkDelete(botMessages);
         } catch (e) {}
         
-        const embed = new EmbedBuilder()
-            .setColor(0x2B2D31)
-            .setTitle('🔐 Roblox Verify Sistemi')
+              const embed = new EmbedBuilder()
+            .setColor(0xFF6B00) // Turuncu renk, Adana teması
+            .setTitle('🏙️ ADANA ROLEPLAY')
+            .setURL('https://discord.gg/adanaroleplay') // Sunucu linkin varsa
+            .setAuthor({ 
+                name: 'Roblox Verify Sistemi', 
+                iconURL: 'https://i.imgur.com/robloxlogo.png' // Roblox logosu
+            })
             .setDescription(
-                '**Adana Roleplay** sunucusuna hos geldin!\n\n' +
-                '**ADIM 1** → **Hesabi Gir** butonuna bas ve Roblox ismini gir\n' +
-                '**ADIM 2** → Roblox profiline dogrulama kodunu ekle\n' +
-                '**ADIM 3** → **Hesabi Onayla** butonuna bas ve <@&' + CONFIG.VERIFIED_ROLE_ID + '> rolunu al!'
+                '> **Adana Roleplay** sunucusuna hoş geldiniz!\n\n' +
+                '> Bu sunucuda oynamak için Roblox hesabınızı doğrulamanız gerekiyor.\n\n' +
+                '**📝 Nasıl Doğrulanırım?**\n\n' +
+                '**1.** Aşağıdaki **Hesabı Gir** butonuna basın\n' +
+                '**2.** Roblox kullanıcı adınızı yazın\n' +
+                '**3.** Size verilen kodu Roblox profilinize ekleyin\n' +
+                '**4.** **Hesabı Onayla** butonuna basarak <@&' + CONFIG.VERIFIED_ROLE_ID + '> rolünüzü alın!\n\n' +
+                '**⚠️ Kurallar:**\n' +
+                '• Sahte hesap kullanmak yasaktır\n' +
+                '• Başkasının hesabıyla doğrulama yasaktır\n' +
+                '• Kuralları okumadan doğrulama yapmayınız'
             )
-            .setFooter({ text: 'Adana Roleplay © 2024' });
+            .setThumbnail('https://cdn.discordapp.com/attachments/1512580110757138432/1512779870978048070/Gemini_Generated_Image_6c4wgg6c4wgg6c4w-Photoroom.png?ex=6a25558b&is=6a24040b&hm=a1f091d9b5d30cafd976010e6754f7e6b10424b5824235cd44d72dd970593e87&') // LOGONUN URL'SİNİ BURAYA YAZ
+            .setImage('https://i.imgur.com/BANNER_RESIM_BURAYA.png') // BANNER RESMİN VARSA BURAYA YAZ
+            .setFooter({ 
+                text: 'Adana Roleplay © 2026 | Güvenliğiniz için doğrulama zorunludur', 
+                iconURL: 'https://i.imgur.com/robloxlogo.png' 
+            })
+            .setTimestamp();
         
-        const row = new ActionRowBuilder()
+                const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId('enter_account')
-                    .setLabel('Hesabi Gir')
+                    .setLabel('HESABI GİR')
                     .setStyle(ButtonStyle.Primary)
-                    .setEmoji('👤'),
+                    .setEmoji('📝'),
                 new ButtonBuilder()
                     .setCustomId('verify_account')
-                    .setLabel('Hesabi Onayla')
+                    .setLabel('HESABI ONAYLA')
                     .setStyle(ButtonStyle.Success)
                     .setEmoji('✅')
             );
